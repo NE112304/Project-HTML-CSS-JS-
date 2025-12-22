@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Gestion de Restaurant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+        }
+        .sidebar {
+            width: 250px;
+            background-color: #333;
+            color: white;
+            height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .sidebar h2 {
+            margin-top: 0;
+        }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+        .sidebar li {
+            margin: 15px 0;
+        }
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .sidebar a:hover {
+            background-color: #575757;
+        }
+        .content {
+            flex: 1;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Gestion de Restaurant</h2>
+        <ul>
+            <li><a href="plats.html">Plats (Menu)</a></li>
+            <li><a href="commandes.html">Commandes</a></li>
+            <li><a href="tables.html">Tables</a></li>
+            <li><a href="reservations.html">Réservations</a></li>
+            <li><a href="employes.html">Employés</a></li>
+        </ul>
+    </div>
+    <div class="content">
+        <h1>Bienvenue sur le Dashboard</h1>
+        <p>Sélectionnez une entité dans la sidebar pour gérer votre restaurant.</p>
+
+    </div>
+</body>
+</html>
