@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commandes - Gestion de Restaurant</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h2>RestoManager</h2>
+            <nav>
+                <ul>
+                    <li><a href="dashboard.html">Dashboard</a></li>
+                    <li><a href="plats.html">Plats (Menu)</a></li>
+                    <li><a href="commandes.html" class="active">Commandes</a></li>
+                    <li><a href="tables.html">Tables</a></li>
+                    <li><a href="reservations.html">Réservations</a></li>
+                    <li><a href="employes.html">Employés</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                &copy; 2026 Restaurant
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <h1>Gestion des Commandes</h1>
+                <button class="btn btn-primary" onclick="openModal()">
+                    <span>+</span> Nouvelle Commande
+                </button>
+            </header>
+
+            <!-- Table -->
+            <div class="table-container">
+                <table id="commandesTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Table</th>
+                            <th>Détails (Plats)</th>
+                            <th>Total</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Form -->
+    <div id="commandeModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 id="modalTitle">Nouvelle Commande</h3>
+                <button class="close-modal" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="commandeForm">
+                <input type="hidden" id="commandeId">
+                <div class="form-group">
+                    <label for="tableSelect">Table</label>
+                    <select id="tableSelect" required>
+                        <!-- Options populated by JS -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Ajouter des Plats</label>
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <select id="platSelect" style="flex: 1;">
+                            <!-- Options populated by JS -->
+                        </select>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="addItem()">Ajouter</button>
+                    </div>
+                    <div id="orderItemsList"
+                        style="border: 1px solid var(--border-color); padding: 10px; border-radius: 4px; min-height: 100px; max-height: 200px; overflow-y: auto;">
+                        <!-- Selected items will appear here -->
+                        <p style="color: var(--text-light); text-align: center; font-style: italic;">Aucun plat ajouté
+                        </p>
+                    </div>
+                </div>
+
+                <div class="form-group" style="text-align: right; font-weight: bold; font-size: 1.2rem;">
+                    Total: <span id="displayTotal">0,00 DH</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="status">Statut</label>
+                    <select id="status">
+                        <option value="En attente">En attente</option>
+                        <option value="En cuisine">En cuisine</option>
+                        <option value="Servi">Servi</option>
+                        <option value="Payé">Payé</option>
+                    </select>
+                </div>
+
+                <div class="text-right mt-4">
+                    <button type="button" class="btn btn-danger" onclick="closeModal()">Annuler</button>
+                    <button type="submit" class="btn btn-success">Sauvegarder</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // State
+        let currentOrderItems = [];
+
+        // DOM Elements
+        const modal = document.getElementById('commandeModal');
+        const form = document.getElementById('commandeForm');
+        const tableBody = document.querySelector('#commandesTable tbody');
+        const tableSelect = document.getElementById('tableSelect');
+        const platSelect = document.getElementById('platSelect');
+        const orderItemsList = document.getElementById('orderItemsList');
+        const displayTotal = document.getElementById('displayTotal');
+
+        // Render functions
+        function renderTable() {
+            const commandes = DataManager.getAll(STORAGE_KEYS.COMMANDES);
+            // Sort by recent first
+            commandes.sort((a, b) => b.id - a.id);
+
+            tableBody.innerHTML = commandes.map(cmd => {
+                const statusClass = getStatusBadgeClass(cmd.status);
+                const itemsSummary = cmd.items.map(i => `${i.nom} (x1)`).join(', ');
+
+                return `
+                <tr>
+                    <td>#${cmd.id.toString().slice(-4)}</td>
+                    <td>${cmd.tableName}</td>
+                    <td><div style="max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${itemsSummary}">${itemsSummary}</div></td>
+                    <td style="font-weight: 600;">${formatCurrency(cmd.total)}</td>
+                    <td><span class="badge ${statusClass}">${cmd.status}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="editCommande(${cmd.id})">Modifier</button>
+                        <button class="btn btn-sm btn-info" onclick="viewDetails(${cmd.id})">Informations</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteCommande(${cmd.id})">Supprimer</button>
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        function getStatusBadgeClass(status) {
+            switch (status) {
+                case 'Payé': return 'badge-success';
+                case 'En cuisine': return 'badge-warning';
+                case 'En attente': return 'badge-danger';
+                default: return 'badge-neutral';
+            }
+        }
+
+        function renderOrderItems() {
+            if (currentOrderItems.length === 0) {
+                orderItemsList.innerHTML = '<p style="color: var(--text-light); text-align: center; font-style: italic;">Aucun plat ajouté</p>';
+                displayTotal.textContent = formatCurrency(0);
+                return;
+            }
+
+            let total = 0;
+            orderItemsList.innerHTML = currentOrderItems.map((item, index) => {
+                total += item.prix;
+                return `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #eee;">
+                    <span>${item.nom} - ${formatCurrency(item.prix)}</span>
+                    <button type="button" style="color: red; background: none; border: none; cursor: pointer;" onclick="removeItem(${index})">&times;</button>
+                </div>
+            `}).join('');
+
+            displayTotal.textContent = formatCurrency(total);
+        }
+
+        function populateSelects() {
+            const tables = DataManager.getAll(STORAGE_KEYS.TABLES);
+            const plats = DataManager.getAll(STORAGE_KEYS.PLATS);
+
+            tableSelect.innerHTML = tables.map(t => `<option value="${t.id}">${t.numero} (${t.status})</option>`).join('');
+            platSelect.innerHTML = plats.map(p => `<option value="${p.id}" data-price="${p.prix}" data-name="${p.nom}">${p.nom} - ${formatCurrency(p.prix)}</option>`).join('');
+        }
+
+        // Modal functions
+        function openModal(isEdit = false) {
+            modal.classList.add('active');
+            populateSelects();
+
+            if (!isEdit) {
+                document.getElementById('modalTitle').textContent = 'Nouvelle Commande';
+                form.reset();
+                document.getElementById('commandeId').value = '';
+                currentOrderItems = [];
+                renderOrderItems();
+            }
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+        }
+
+        function addItem() {
+            const selectedOption = platSelect.options[platSelect.selectedIndex];
+            if (!selectedOption) return;
+
+            const item = {
+                id: parseInt(selectedOption.value),
+                nom: selectedOption.getAttribute('data-name'),
+                prix: parseFloat(selectedOption.getAttribute('data-price'))
+            };
+
+            currentOrderItems.push(item);
+            renderOrderItems();
+        }
+
+        function removeItem(index) {
+            currentOrderItems.splice(index, 1);
+            renderOrderItems();
+        }
+
+        function viewDetails(id) {
+            const commandes = DataManager.getAll(STORAGE_KEYS.COMMANDES);
+            const cmd = commandes.find(c => c.id === id);
+            if (cmd) {
+                const displayData = {
+                    ID: cmd.id,
+                    Table: cmd.tableName,
+                    Statut: cmd.status,
+                    Total: formatCurrency(cmd.total),
+                    Date: new Date(cmd.date).toLocaleString('fr-FR'),
+                    Plats: cmd.items.map(i => `${i.nom}`).join(', ')
+                };
+                openDetailsModal('Détails de la Commande', displayData);
+            }
+        }
+
+        // CRUD Operations
+        function editCommande(id) {
+            const commandes = DataManager.getAll(STORAGE_KEYS.COMMANDES);
+            const cmd = commandes.find(c => c.id === id);
+            if (cmd) {
+                openModal(true);
+                document.getElementById('modalTitle').textContent = 'Modifier la Commande';
+                document.getElementById('commandeId').value = cmd.id;
+                document.getElementById('tableSelect').value = cmd.tableId;
+                document.getElementById('status').value = cmd.status;
+                currentOrderItems = [...cmd.items];
+                renderOrderItems();
+            }
+        }
+
+        function deleteCommande(id) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cette commande ?')) {
+                DataManager.delete(STORAGE_KEYS.COMMANDES, id);
+                renderTable();
+            }
+        }
+
+        // Form Submit
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (currentOrderItems.length === 0) {
+                alert('Veuillez ajouter au moins un plat.');
+                return;
+            }
+
+            const id = document.getElementById('commandeId').value;
+            const tableId = document.getElementById('tableSelect').value;
+            const tableText = document.getElementById('tableSelect').options[document.getElementById('tableSelect').selectedIndex].text;
+
+            // Extract just the table number (e.g., "T1") from "T1 (Occupée)"
+            const tableName = tableText.split(' ')[0];
+
+            let total = currentOrderItems.reduce((acc, item) => acc + item.prix, 0);
+
+            const commandeData = {
+                id: id ? parseInt(id) : null,
+                tableId: parseInt(tableId),
+                tableName: tableName,
+                items: currentOrderItems,
+                status: document.getElementById('status').value,
+                total: total,
+                date: new Date().toISOString()
+            };
+
+            if (id) {
+                DataManager.update(STORAGE_KEYS.COMMANDES, commandeData);
+            } else {
+                DataManager.add(STORAGE_KEYS.COMMANDES, commandeData);
+            }
+
+            closeModal();
+            renderTable();
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTable();
+
+            // Check for URL params
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('action') === 'new') {
+                openModal();
+            }
+        });
+        window.onclick = (event) => {
+            if (event.target == modal) closeModal();
+        };
+    </script>
+</body>
+
+</html>

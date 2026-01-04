@@ -1,64 +1,101 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Gestion de Restaurant</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            display: flex;
-        }
-        .sidebar {
-            width: 250px;
-            background-color: #333;
-            color: white;
-            height: 100vh;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        .sidebar h2 {
-            margin-top: 0;
-        }
-        .sidebar ul {
-            list-style: none;
-            padding: 0;
-        }
-        .sidebar li {
-            margin: 15px 0;
-        }
-        .sidebar a {
-            color: white;
-            text-decoration: none;
-            display: block;
-            padding: 10px;
-            border-radius: 4px;
-        }
-        .sidebar a:hover {
-            background-color: #575757;
-        }
-        .content {
-            flex: 1;
-            padding: 20px;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-    <div class="sidebar">
-        <h2>Gestion de Restaurant</h2>
-        <ul>
-            <li><a href="plats.html">Plats (Menu)</a></li>
-            <li><a href="commandes.html">Commandes</a></li>
-            <li><a href="tables.html">Tables</a></li>
-            <li><a href="reservations.html">Réservations</a></li>
-            <li><a href="employes.html">Employés</a></li>
-        </ul>
-    </div>
-    <div class="content">
-        <h1>Bienvenue sur le Dashboard</h1>
-        <p>Sélectionnez une entité dans la sidebar pour gérer votre restaurant.</p>
 
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h2>RestoManager</h2>
+            <nav>
+                <ul>
+                    <li><a href="dashboard.html" class="active">Dashboard</a></li>
+                    <li><a href="plats.html">Plats (Menu)</a></li>
+                    <li><a href="commandes.html">Commandes</a></li>
+                    <li><a href="tables.html">Tables</a></li>
+                    <li><a href="reservations.html">Réservations</a></li>
+                    <li><a href="employes.html">Employés</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                &copy; 2026 Restaurant
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <h1>Tableau de Bord</h1>
+                <div class="user-profile">
+                    <span class="badge badge-neutral">AdminConnecté</span>
+                </div>
+            </header>
+
+            <!--statue du dashboard-->
+            <div class="card-grid">
+                <div class="card card-blue">
+                    <h3>Commandes en cours</h3>
+                    <p class="value" id="stats-orders">0</p>
+                </div>
+                <div class="card card-green">
+                    <h3>Chiffre d'affaires (Jour)</h3>
+                    <p class="value" id="stats-revenue">750,00 DH</p>
+                </div>
+                <div class="card card-orange">
+                    <h3>Tables Occupées</h3>
+                    <p class="value" id="stats-tables">3/12</p>
+                </div>
+                <div class="card card-purple">
+                    <h3>Réservations</h3>
+                    <p class="value" id="stats-reservations">5</p>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <canvas id="ordersChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <canvas id="tablesChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <h3>Actions Rapides</h3>
+                <div class="quick-actions-grid">
+                    <a href="commandes.html?action=new" class="action-card">
+                        <span>📝</span>
+                        <h4>Nouvelle Commande</h4>
+                    </a>
+                    <a href="reservations.html?action=new" class="action-card">
+                        <span>📅</span>
+                        <h4>Nouvelle Réservation</h4>
+                    </a>
+                    <a href="tables.html" class="action-card">
+                        <span>🪑</span>
+                        <h4>Gérer Tables</h4>
+                    </a>
+                    <a href="employes.html?action=new" class="action-card">
+                        <span>👥</span>
+                        <h4>Ajouter Employé</h4>
+                    </a>
+                </div>
+            </div>
+        </main>
     </div>
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+    <script src="dashboard.js"></script>
 </body>
+
 </html>
